@@ -25,7 +25,6 @@ for i in `seq 0 7` ; do python story_structure_infiller.py --i $i & done
 for i in `seq 0 7` ; do python story_structure_infiller.py --i $i --generate_fantom_like_data & done  # optional, example on how we could generate longer context data
 ```
 
-
 ## Additional Resources
 
 1. Statistics about ExploreToM when used as an eval benchmark or to gather insights
