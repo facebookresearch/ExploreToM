@@ -807,7 +807,7 @@ if __name__ == '__main__':
     parser.add_argument('--generate_fantom_like_data', action='store_true')
     parser.add_argument('--num_stories_total', type=int, default=10)
 
-    NUM_PARALLEL = 9
+    NUM_PARALLEL = 8
     parser.add_argument('--i', type=int, default=None, help="DIY parallelization :)")
     args = parser.parse_args()
 

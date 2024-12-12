@@ -1139,7 +1139,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--generalization_experiment', action='store_true')
 
-    NUM_PARALLEL = 16
+    NUM_PARALLEL = 8
     parser.add_argument('--i', type=int, default=None, help="DIY parallelization :)")
     args = parser.parse_args()
 

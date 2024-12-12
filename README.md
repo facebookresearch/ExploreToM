@@ -1,5 +1,10 @@
 # Explore Theory-of-Mind: Program-Guided Adversarial Data Generation for Theory of Mind Reasoning
 
+![alt text](images/figure_1_exploretom_isolated.png)
+
+ExploreToM is the first framework to allow **large-scale generation of diverse and challenging theory of mind data for robust training and evaluation**.
+Our approach leverages an A* search over a custom domain-specific language to produce complex story structures and novel, diverse, yet plausible scenarios to stress test the limits of LLMs.
+
 ## Running the whole pipeline
 1. Generate story contexts
 ```
@@ -13,7 +18,7 @@ for i in `seq 0 7` ; do python story_structure_searcher.py \
     --experiment_to_run search \
     --model_name meta-llama/Meta-Llama-3.1-70B-Instruct \
     --model_access_method vllm-api \
-    --a_star_neighbor_priority weight-goal5 \
+    --a_star_neighbor_priority weight-goal4 \
     --model_generated_contexts_file "logs/model_generated_contexts_Llama-3.1-70B-Instruct_n_100_p_6_m_6_r_2_update_object_state_equiv_class_for_v1_dsl_wo_upsampling.jsonl" \
     --i $i & done
 ```
@@ -27,8 +32,9 @@ for i in `seq 0 7` ; do python story_structure_infiller.py --i $i --generate_fan
 
 ## Additional Resources
 
-1. Statistics about ExploreToM when used as an eval benchmark or to gather insights
-(Prerequisites)
+### Statistics about TrackTheMind when used as an eval benchmark or to gather insights
+
+Run all of these in order.
 ```
 for i in `seq 0 7` ; do python story_structure_searcher.py \
     --experiment_to_run baseline \
@@ -39,10 +45,6 @@ for i in `seq 0 7` ; do python story_structure_searcher.py \
 python compute_statistics.py --evaluate_cross_model_generations --model_name gpt-4o --model_access_method openai-azure-api
 python compute_statistics.py --evaluate_cross_model_generations --model_name mistralai/Mixtral-8x7B-Instruct-v0.1 --model_access_method vllm-python
 python compute_statistics.py --evaluate_cross_model_generations --model_name meta-llama/Meta-Llama-3.1-70B-Instruct --model_access_method vllm-python
-```
-
-(Actual computations)
-```
 python compute_statistics.py --evaluate_cross_model_generations
 python compute_statistics.py
 ```
@@ -66,6 +68,21 @@ See all vllm args here: https://docs.vllm.ai/en/latest/models/engine_args.html
 6. <ctrl-A A D to get out>
 ```
 
+## Citation
+
+If you found the paper or data helpful, consider citing it:
+
+```
+@inproceedings{
+exploretom2024,
+title={ExploreToM: program-guided adversarial data generation for theory of mind reasoning},
+author={Sclar, Melanie and Dwivedi-Yu, Jane and Fazel-Zarandi, Maryam and Tsvetkov, Yulia and Bisk, Yonatan and Choi, Yejin and Celikyilmaz, Asli},
+year={2024},
+note={under review}
+}
+```
+
 ## Licensing
 
 See our LICENSE file for licensing details.
+
