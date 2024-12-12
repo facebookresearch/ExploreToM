@@ -1,16 +1,6 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-
-
+# (prompt, params, model) = output
 PROMPT_OUTPUT_CACHE = {
-    (
-        "List 100 names. Do not include any other text.",
-        (1.0, 0.0),
-        "Llama-3.1-70B-Instruct",
-    ): """1. Olivia
+    ("List 100 names. Do not include any other text.", (1.0, 0.0), "Llama-3.1-70B-Instruct"): """1. Olivia
     2. Liam
     3. Ava
     4. Noah
@@ -110,18 +100,14 @@ PROMPT_OUTPUT_CACHE = {
     98. Kaylee
     99. Justin
     100. Rebecca""",
-    (
-        """Suggest 100 different general contexts in which a story may happen. The context should be able to have several people in the same location easily listening and observing each other.
+    ("""Suggest 100 different general contexts in which a story may happen. The context should be able to have several people in the same location easily listening and observing each other.
 
 1. a school
 2. a hospital
 3. a vet shop
 4. a family living room
 
-Follow the format and make the descriptions as short as possible. Do not include any text before the list.""",
-        (1.0, 0.0),
-        "Llama-3.1-70B-Instruct",
-    ): """1. a school
+Follow the format and make the descriptions as short as possible. Do not include any text before the list.""", (1.0, 0.0), "Llama-3.1-70B-Instruct"): """1. a school
     2. a hospital
     3. a vet shop
     4. a family living room
@@ -220,5 +206,5 @@ Follow the format and make the descriptions as short as possible. Do not include
     97. a university cafeteria
     98. a hospital cafeteria
     99. a office break room
-    100. a corporate conference room""",
+    100. a corporate conference room"""
 }

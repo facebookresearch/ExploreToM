@@ -1,22 +1,10 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-
 import os
 import json
 import random
 import argparse
 import pandas as pd
 from collections import Counter
-from utils import (
-    ModelCallHandler,
-    _parse_answer_with_separators,
-    _remove_noun_articles,
-    _dump_dict_list_to_jsonl,
-    _parse_fields,
-)
+from utils import ModelCallHandler, _parse_answer_with_separators, _remove_noun_articles, _dump_dict_list_to_jsonl, _parse_fields
 from cached_prompt_outputs import PROMPT_OUTPUT_CACHE
 
 
@@ -60,14 +48,8 @@ To get inspired, make this context happen in {sampled_location}. Suggested names
         ("ROOM IN WHICH THIS STORY BEGINS:", False),
         ("NAME ONE REASONABLE ALTERNATIVE ROOM THEY COULD MOVE TO:", False),
         ("NAME ONE OBJECT TO BE MOVED BY A PERSON DURING THE STORY:", False),
-        (
-            "LIST {num_containers} REASONABLE OPAQUE CONTAINERS THAT COULD CONTAIN THIS OBJECT:",
-            True,
-        ),
-        (
-            "LIST {num_topics} DISTINCT AND REASONABLE TOPICS THEY COULD BE CHATTING ABOUT:",
-            True,
-        ),
+        ("LIST {num_containers} REASONABLE OPAQUE CONTAINERS THAT COULD CONTAIN THIS OBJECT:", True),
+        ("LIST {num_topics} DISTINCT AND REASONABLE TOPICS THEY COULD BE CHATTING ABOUT:", True),
     ]
 
     PROMPT_VERIFY_STORY_CONTEXT_IS_REASONABLE = """Given the elements of a story context, are the following statements true?
@@ -85,85 +67,57 @@ Include the itemized questions and do not add any extra text. Answer all items f
         self.model_shortname = self.model_call_handler.model_shortname
 
     def _sample_list(self, prompt_list_request, **kwargs):
-        top_p = kwargs["top_p"]
-        temperature = kwargs["temperature"]
-        prompt_output_cache_key = (
-            prompt_list_request,
-            (top_p, temperature),
-            self.model_call_handler.model_shortname,
-        )
+        top_p = kwargs['top_p']
+        temperature = kwargs['temperature']
+        prompt_output_cache_key = (prompt_list_request, (top_p, temperature), self.model_call_handler.model_shortname)
         if prompt_output_cache_key in PROMPT_OUTPUT_CACHE:
             model_output = PROMPT_OUTPUT_CACHE[prompt_output_cache_key]
         else:
-            assert (
-                False
-            ), "We should already have this cached for the models used in the paper (comment this otherwise)."
-            model_output, tokens_used = self.model_call_handler.call_model(
-                prompt_list_request, **kwargs
-            )
-        return [e.split(".")[-1].strip() for e in model_output.split("\n")]
+            assert False, "We should already have this cached for the models used in the paper (comment this otherwise)."
+            model_output, tokens_used = self.model_call_handler.call_model(prompt_list_request, **kwargs)
+        return [e.split('.')[-1].strip() for e in model_output.split('\n')]
 
-    def _get_simple_story_contexts_output_filename(
-        self, num_elements_by_class, num_requested_contexts
-    ):
+    def _get_simple_story_contexts_output_filename(self, num_elements_by_class, num_requested_contexts):
         """
         Filename corresponding to the first stage of story context generation (before adding equivalent actions)
         """
-        os.makedirs("logs", exist_ok=True)
-        num_people, num_moves, num_rooms = (
-            num_elements_by_class,
-            num_elements_by_class,
-            2,
-        )
-        filepath = f"logs/model_generated_contexts_{self.model_shortname}_n_{num_requested_contexts}_p_{num_people}_m_{num_moves}_r_{num_rooms}.jsonl"
+        os.makedirs('logs', exist_ok=True)
+        num_people, num_moves, num_rooms = num_elements_by_class, num_elements_by_class, 2
+        filepath = f'logs/model_generated_contexts_{self.model_shortname}_n_{num_requested_contexts}_p_{num_people}_m_{num_moves}_r_{num_rooms}.jsonl'
         return filepath
 
-    def _build_prompt_to_verify_story_context_is_reasonable(
-        self, people_with_personas, object_name, container_names, room_names, topics
-    ):
+    def _build_prompt_to_verify_story_context_is_reasonable(self, people_with_personas, object_name, container_names, room_names, topics):
         enumeration = []
         for container_name_1 in container_names:
-            enumeration.append(
-                f"* A {object_name} can reasonably fit in the {container_name_1}: (yes/no/unsure)"
-            )
+            enumeration.append(f"* A {object_name} can reasonably fit in the {container_name_1}: (yes/no/unsure)")
         for container_name_1 in container_names:
-            enumeration.append(
-                f"* It is impossible to see what's inside a {container_name_1} without interacting with the object: (yes/no/unsure)"
-            )
+            enumeration.append(f"* It is impossible to see what's inside a {container_name_1} without interacting with the object: (yes/no/unsure)")
         for room_1 in room_names:
-            enumeration.append(
-                f"* It is possible that a {object_name} is in a {room_1}: (yes/no/unsure)"
-            )
+            enumeration.append(f"* It is possible that a {object_name} is in a {room_1}: (yes/no/unsure)")
         for topic_1 in topics:
-            enumeration.append(
-                f"* It is plausible for people in this context to be talking about {topic_1}: (yes/no/unsure)"
-            )
-        expected_answers = ["yes" for _ in range(len(enumeration))]
+            enumeration.append(f"* It is plausible for people in this context to be talking about {topic_1}: (yes/no/unsure)")
+        expected_answers = ['yes' for _ in range(len(enumeration))]
 
         llm_judge_prompt = self.PROMPT_VERIFY_STORY_CONTEXT_IS_REASONABLE.format(
             people_with_personas=people_with_personas,
-            enumeration="\n".join(enumeration),
+            enumeration="\n".join(enumeration)
         )
         return llm_judge_prompt, expected_answers
 
     def sample_names_list(self):
-        self.name_list = self._sample_list(
-            self.PROMPT_NAME_LISTING, top_p=1.0, temperature=0.0
-        )
+        self.name_list = self._sample_list(self.PROMPT_NAME_LISTING, top_p=1.0, temperature=0.0)
 
     def sample_location_list(self):
-        self.location_list = self._sample_list(
-            self.PROMPT_STORY_CONTEXT_LISTING, top_p=1.0, temperature=0.0
-        )
+        self.location_list = self._sample_list(self.PROMPT_STORY_CONTEXT_LISTING, top_p=1.0, temperature=0.0)
 
     def sample_story_contexts(self, num_elements_by_class, num_requested_contexts):
         sample_context_dict_list = []
         while len(sample_context_dict_list) < num_requested_contexts:
-            print("Attempting to create context #", len(sample_context_dict_list))
+            print('Attempting to create context #', len(sample_context_dict_list))
             # 1. Sample names and initial location
             sampled_names_list = random.sample(self.name_list, num_elements_by_class)
             sampled_location = random.sample(self.location_list, 1)[0]
-
+        
             # 2. Sample full context
             sampled_context, tokens_used = self.model_call_handler.call_model(
                 self.PROMPT_STORY_CONTEXT.format(
@@ -171,7 +125,7 @@ Include the itemized questions and do not add any extra text. Answer all items f
                     num_containers=num_elements_by_class,
                     num_topics=num_elements_by_class,
                     sampled_location=sampled_location,
-                    sampled_names=", ".join(sampled_names_list),
+                    sampled_names=", ".join(sampled_names_list)
                 ),
                 max_tokens=1000,
                 top_p=1.0,
@@ -181,70 +135,48 @@ Include the itemized questions and do not add any extra text. Answer all items f
             # 3. Parse sampled full context into sections
             parsed_parts = _parse_answer_with_separators(
                 sampled_context,
-                [
-                    (
-                        sep.format(
-                            num_containers=num_elements_by_class,
-                            num_topics=num_elements_by_class,
-                        ),
-                        is_list,
-                    )
-                    for sep, is_list in self.PROMPT_STORY_CONTEXT_SEPARATORS
-                ],
+                [(sep.format(num_containers=num_elements_by_class, num_topics=num_elements_by_class), is_list) for sep, is_list in self.PROMPT_STORY_CONTEXT_SEPARATORS]
             )
             if parsed_parts is False:
                 continue
 
             # 4. Parse and clean each field
             try:
-                people_with_personas = [elem.split(",") for elem in parsed_parts[0]]
+                people_with_personas = [elem.split(',') for elem in parsed_parts[0]]
                 story_context = parsed_parts[1]
-                room = parsed_parts[2].strip(".\n ")
-                alternative_room = parsed_parts[3].strip(".\n ")
+                room = parsed_parts[2].strip('.\n ')
+                alternative_room = parsed_parts[3].strip('.\n ')
                 rooms = [room, alternative_room]
-                object_name = parsed_parts[4].strip(".\n ")
-                containers = [elem.strip(".\n ") for elem in parsed_parts[5]]
-                topics = [elem.strip(".\n ") for elem in parsed_parts[6]]
+                object_name = parsed_parts[4].strip('.\n ')
+                containers = [elem.strip('.\n ') for elem in parsed_parts[5]]
+                topics = [elem.strip('.\n ') for elem in parsed_parts[6]]
 
                 sample_context_dict = {
-                    "people_names": [
-                        people.strip(".\n ")
-                        for people, personas in people_with_personas
-                    ],
-                    "people_personas": [
-                        personas.strip(".\n ")
-                        for people, personas in people_with_personas
-                    ],
-                    "people_with_personas": parsed_parts[0],
-                    "story_context": story_context,
-                    "rooms": [
-                        _remove_noun_articles(room),
-                        _remove_noun_articles(alternative_room),
-                    ],
-                    "objects": [_remove_noun_articles(object_name)],
-                    "container_names": [_remove_noun_articles(c) for c in containers],
-                    "topics": topics,
+                    'people_names': [people.strip('.\n ') for people, personas in people_with_personas],
+                    'people_personas': [personas.strip('.\n ') for people, personas in people_with_personas],
+                    'people_with_personas': parsed_parts[0],
+                    'story_context': story_context,
+                    'rooms': [_remove_noun_articles(room), _remove_noun_articles(alternative_room)],
+                    'objects': [_remove_noun_articles(object_name)],
+                    'container_names': [_remove_noun_articles(c) for c in containers],
+                    'topics': topics,
                 }
             except Exception as e:
                 print(e)
                 continue
 
             # 5. Verify reasonability with LLM as a judge
-            llm_judge_prompt, llm_judge_prompt_expected_answers = (
-                self._build_prompt_to_verify_story_context_is_reasonable(
-                    sample_context_dict["people_with_personas"],
-                    sample_context_dict["objects"][0],
-                    sample_context_dict["container_names"],
-                    sample_context_dict["rooms"],
-                    sample_context_dict["topics"],
-                )
+            llm_judge_prompt, llm_judge_prompt_expected_answers = self._build_prompt_to_verify_story_context_is_reasonable(
+                sample_context_dict['people_with_personas'],
+                sample_context_dict['objects'][0],
+                sample_context_dict['container_names'],
+                sample_context_dict['rooms'],
+                sample_context_dict['topics']
             )
-            output = self.model_call_handler.verify_using_llm_as_judge(
-                {}, llm_judge_prompt, llm_judge_prompt_expected_answers
-            )
-            if not output["is_equivalent"]:
+            output = self.model_call_handler.verify_using_llm_as_judge({}, llm_judge_prompt, llm_judge_prompt_expected_answers)
+            if not output['is_equivalent']:
                 continue
-            sample_context_dict["checked_reasonability"] = True
+            sample_context_dict['checked_reasonability'] = True
             sample_context_dict_list.append(sample_context_dict)
         return sample_context_dict_list
 
@@ -253,28 +185,22 @@ Include the itemized questions and do not add any extra text. Answer all items f
         self.sample_location_list()
 
         # 1. Sample simple story contexts
-        filepath = self._get_simple_story_contexts_output_filename(
-            num_elements_by_class, num_requested_contexts
-        )
+        filepath = self._get_simple_story_contexts_output_filename(num_elements_by_class, num_requested_contexts)
         if os.path.exists(filepath):
-            sample_context_dict_list = pd.read_json(filepath, lines=True).to_dict(
-                "records"
-            )
+            sample_context_dict_list = pd.read_json(filepath, lines=True).to_dict('records')
         else:
-            sample_context_dict_list = self.sample_story_contexts(
-                num_elements_by_class, num_requested_contexts
-            )
+            sample_context_dict_list = self.sample_story_contexts(num_elements_by_class, num_requested_contexts)
             _dump_dict_list_to_jsonl(sample_context_dict_list, filepath)
 
         self.compute_object_statistics(sample_context_dict_list)
         return filepath
-
+    
     def compute_object_statistics(self, sample_context_dict_list):
         word_counter = Counter()
         for sample_context_dict in sample_context_dict_list:
-            for word in sample_context_dict["objects"][0].split(" "):
-                word_counter[word.strip(",. :-").lower()] += 1
-        print("Most common objects:", word_counter.most_common(n=20))
+            for word in sample_context_dict['objects'][0].split(' '):
+                word_counter[word.strip(',. :-').lower()] += 1
+        print('Most common objects:', word_counter.most_common(n=20))
 
 
 class ObjectStateUpdatesGenerator:
@@ -295,10 +221,7 @@ class ObjectStateUpdatesGenerator:
         # "The change is reversible"  # this might not be needed
     ]
 
-    BASE_PROMPT_STATE_UPDATE_EQUIVALENCE_FIELDS = [
-        "ACTION CAUSING AN OBJECT STATE CHANGE:",
-        "PROPERTY:",
-    ]
+    BASE_PROMPT_STATE_UPDATE_EQUIVALENCE_FIELDS = ['ACTION CAUSING AN OBJECT STATE CHANGE:', 'PROPERTY:']
     BASE_PROMPT_STATE_UPDATE_EQUIVALENCE = """OBJECT: Jam jar
 ACTION CAUSING AN OBJECT STATE CHANGE: Moving the jam jar to the fridge
 PROPERTY: object location
@@ -349,62 +272,35 @@ OBJECT NAME: {object_name}
 STATE CHANGE: {state_change}
 PARSED ACTION WITH SUBJECT:
 RESULTING STATE OF THE OBJECT:"""
-    PROMPT_DSL_COMPATIBLE_FORMAT_FIELDS = [
-        "OBJECT NAME:",
-        "STATE CHANGE:",
-        "PARSED ACTION WITH SUBJECT:",
-        "RESULTING STATE OF THE OBJECT:",
-    ]
+    PROMPT_DSL_COMPATIBLE_FORMAT_FIELDS = ['OBJECT NAME:', 'STATE CHANGE:', 'PARSED ACTION WITH SUBJECT:', 'RESULTING STATE OF THE OBJECT:']
+
 
     def __init__(self, model_call_handler):
         self.model_call_handler = model_call_handler
         self.model_shortname = self.model_call_handler.model_shortname
-
+    
     def _get_filename_state_update_without_dsl_compatible(self, base_filename):
-        return (
-            base_filename[: -len(".jsonl")] + "_update_object_state_equiv_class.jsonl"
-        )
+        return base_filename[:-len('.jsonl')] + '_update_object_state_equiv_class.jsonl'
 
     def _get_filename_state_update_dsl_compatible(self, base_filename):
-        return (
-            base_filename[: -len(".jsonl")]
-            + f"_update_object_state_equiv_class_for_v1_dsl_wo_upsampling.jsonl"
-        )
+        return base_filename[:-len('.jsonl')] + f"_update_object_state_equiv_class_for_v1_dsl_wo_upsampling.jsonl"
 
-    def sample_object_state_update(
-        self, sample_context_dict_list, num_contexts_to_fill=50
-    ):
-        model_generated_context_dict_list = sample_context_dict_list[
-            :num_contexts_to_fill
-        ]
-        equivalent_actions_list = [
-            {} for _ in range(len(model_generated_context_dict_list))
-        ]
+    def sample_object_state_update(self, sample_context_dict_list, num_contexts_to_fill=50):
+        model_generated_context_dict_list = sample_context_dict_list[:num_contexts_to_fill]
+        equivalent_actions_list = [{} for _ in range(len(model_generated_context_dict_list))]
 
         # Main: Sample equivalent actions for both visible and invisible changes
         for update_type_to_sample, STATE_UPDATE_DESIDERATA in [
-            ("update_object_state-invisible", self.INVISIBLE_STATE_UPDATE_DESIDERATA),
-            ("update_object_state-visible", self.VISIBLE_STATE_UPDATE_DESIDERATA),
-        ]:
+                ('update_object_state-invisible', self.INVISIBLE_STATE_UPDATE_DESIDERATA), 
+                ('update_object_state-visible', self.VISIBLE_STATE_UPDATE_DESIDERATA)
+            ]:
 
             # 0. Infill prompts that will be required for sampling and vrifying
             desiderata_enum = "\n".join([f"* {e}" for e in STATE_UPDATE_DESIDERATA])
-            desiderata_enum_with_qs = "\n".join(
-                [f"* {e}: (yes/no/unsure)" for e in STATE_UPDATE_DESIDERATA]
-            )
-            PROMPT_STATE_UPDATE_EQUIVALENCE = (
-                self.BASE_PROMPT_STATE_UPDATE_EQUIVALENCE.format(
-                    desiderata=desiderata_enum
-                )
-            )
-            PROMPT_VERIFY_STATE_UPDATE_EQUIVALENCE = (
-                self.BASE_PROMPT_VERIFY_STATE_UPDATE_EQUIVALENCE.format(
-                    desiderata=desiderata_enum_with_qs
-                )
-            )
-            PROMPT_VERIFY_STATE_UPDATE_EQUIVALENCE_EXPECTED_ANSWERS = ["yes"] * len(
-                STATE_UPDATE_DESIDERATA
-            )
+            desiderata_enum_with_qs = "\n".join([f"* {e}: (yes/no/unsure)" for e in STATE_UPDATE_DESIDERATA])
+            PROMPT_STATE_UPDATE_EQUIVALENCE = self.BASE_PROMPT_STATE_UPDATE_EQUIVALENCE.format(desiderata=desiderata_enum)
+            PROMPT_VERIFY_STATE_UPDATE_EQUIVALENCE = self.BASE_PROMPT_VERIFY_STATE_UPDATE_EQUIVALENCE.format(desiderata=desiderata_enum_with_qs)
+            PROMPT_VERIFY_STATE_UPDATE_EQUIVALENCE_EXPECTED_ANSWERS = ['yes'] * len(STATE_UPDATE_DESIDERATA)
 
             for i in range(len(model_generated_context_dict_list)):
                 story_context = model_generated_context_dict_list[i]["story_context"]
@@ -412,164 +308,95 @@ RESULTING STATE OF THE OBJECT:"""
 
                 # 1. Sample candidates to equivalent object update actions for each existing context
                 model_response, tokens_used = self.model_call_handler.call_model(
-                    PROMPT_STATE_UPDATE_EQUIVALENCE.format(
-                        story_context=story_context, object_name=object_name
-                    ),
-                    max_tokens=400,
-                    top_p=1.0,
-                    temperature=1.0,
+                    PROMPT_STATE_UPDATE_EQUIVALENCE.format(story_context=story_context, object_name=object_name),
+                    max_tokens=400, top_p=1.0, temperature=1.0
                 )
 
                 # 2. Verify which candidates to keep
                 candidates_to_keep = []
-                for state_change, property_name in _parse_fields(
-                    model_response, self.BASE_PROMPT_STATE_UPDATE_EQUIVALENCE_FIELDS
-                ):
-                    fields_dict = {
-                        "state_change": state_change,
-                        "object_name": object_name,
-                    }
+                for state_change, property_name in _parse_fields(model_response, self.BASE_PROMPT_STATE_UPDATE_EQUIVALENCE_FIELDS):
+                    fields_dict = {'state_change': state_change, 'object_name': object_name}
                     result = self.model_call_handler.verify_using_llm_as_judge(
-                        fields_dict,
+                        fields_dict, 
                         PROMPT_VERIFY_STATE_UPDATE_EQUIVALENCE,
                         PROMPT_VERIFY_STATE_UPDATE_EQUIVALENCE_EXPECTED_ANSWERS,
                     )
-                    if result["is_equivalent"]:
-                        fields_dict["property_name"] = property_name
-                        fields_dict["story_context"] = story_context
+                    if result['is_equivalent']:
+                        fields_dict['property_name'] = property_name
+                        fields_dict['story_context'] = story_context
                         candidates_to_keep.append(fields_dict)
                 equivalent_actions_list[i][update_type_to_sample] = candidates_to_keep
 
         # 3. Once all equivalent actions have been sampled, update the initial setting
         for i in range(len(equivalent_actions_list)):
-            model_generated_context_dict_list[i]["class_equivalences"] = (
-                equivalent_actions_list[i]
-            )
+            model_generated_context_dict_list[i]['class_equivalences'] = equivalent_actions_list[i]
         return model_generated_context_dict_list
 
     def make_data_dsl_compatible(self, model_generated_context_dict_list):
         """
         Make the sampled object state updates suitable to use with our DSL that requires having the resulting state.
 
-        TOMAKEEFFICIENT: This could've been done in the same call as the object state update generation,
+        TOMAKEEFFICIENT: This could've been done in the same call as the object state update generation, 
         but I'm keeping the original implementation.
         """
 
         for i1, e in enumerate(model_generated_context_dict_list):
-            for k in e["class_equivalences"]:
-                for i2, elem in enumerate(e["class_equivalences"][k]):
+            for k in e['class_equivalences']:
+                for i2, elem in enumerate(e['class_equivalences'][k]):
                     model_response, _ = self.model_call_handler.call_model(
-                        self.PROMPT_DSL_COMPATIBLE_FORMAT.format(
-                            object_name=elem["object_name"],
-                            state_change=elem["state_change"],
-                        ),
+                        self.PROMPT_DSL_COMPATIBLE_FORMAT.format(object_name=elem['object_name'], state_change=elem['state_change']),
                         temperature=0.0,
-                        max_tokens=400,
+                        max_tokens=400
                     )
-                    output = _parse_fields(
-                        model_response, self.PROMPT_DSL_COMPATIBLE_FORMAT_FIELDS
-                    )
-                    if len(output) != 1 or len(output[0]) != len(
-                        self.PROMPT_DSL_COMPATIBLE_FORMAT_FIELDS
-                    ):
-                        print("Could not parse.", output)
+                    output = _parse_fields(model_response, self.PROMPT_DSL_COMPATIBLE_FORMAT_FIELDS)
+                    if len(output) != 1 or len(output[0]) != len(self.PROMPT_DSL_COMPATIBLE_FORMAT_FIELDS):
+                        print('Could not parse.', output)
                         continue
                     output = output[0]  # only one item to be parsed
                     text_description = output[2]
                     resulting_state = output[3]
-                    if (
-                        "<person>" not in text_description
-                        or "<object>" not in text_description
-                    ):
+                    if '<person>' not in text_description or '<object>' not in text_description:
                         continue
-                    text_description = text_description.replace(
-                        "<person>", "{person}"
-                    ).replace("<object>", "{object}")
-                    model_generated_context_dict_list[i1]["class_equivalences"][k][i2][
-                        "text_description"
-                    ] = text_description
-                    model_generated_context_dict_list[i1]["class_equivalences"][k][i2][
-                        "resulting_state"
-                    ] = resulting_state
-
+                    text_description = text_description.replace('<person>', '{person}').replace('<object>', '{object}')
+                    model_generated_context_dict_list[i1]['class_equivalences'][k][i2]['text_description'] = text_description
+                    model_generated_context_dict_list[i1]['class_equivalences'][k][i2]['resulting_state'] = resulting_state
+                
                 # filter out failed cases
-                model_generated_context_dict_list[i1]["class_equivalences"][k] = [
-                    elem
-                    for elem in model_generated_context_dict_list[i1][
-                        "class_equivalences"
-                    ][k]
-                    if "text_description" in elem
-                ]
+                model_generated_context_dict_list[i1]['class_equivalences'][k] = [elem for elem in model_generated_context_dict_list[i1]['class_equivalences'][k] if 'text_description' in elem]
         return model_generated_context_dict_list
 
     def main(self, base_filename, num_contexts_to_fill):
-        sample_context_dict_list = pd.read_json(base_filename, lines=True).to_dict(
-            "records"
-        )
+        sample_context_dict_list = pd.read_json(base_filename, lines=True).to_dict('records')
 
         filepath = self._get_filename_state_update_without_dsl_compatible(base_filename)
         if os.path.exists(filepath):
-            sample_context_dict_list = pd.read_json(filepath, lines=True).to_dict(
-                "records"
-            )
+            sample_context_dict_list = pd.read_json(filepath, lines=True).to_dict('records')
         else:
-            sample_context_dict_list = self.sample_object_state_update(
-                sample_context_dict_list, num_contexts_to_fill=num_contexts_to_fill
-            )
+            sample_context_dict_list = self.sample_object_state_update(sample_context_dict_list, num_contexts_to_fill=num_contexts_to_fill)
             _dump_dict_list_to_jsonl(sample_context_dict_list, filepath)
 
-        filepath_dsl_compatible = self._get_filename_state_update_dsl_compatible(
-            base_filename
-        )
+        filepath_dsl_compatible = self._get_filename_state_update_dsl_compatible(base_filename)
         if os.path.exists(filepath_dsl_compatible):
-            sample_context_dict_list = pd.read_json(
-                filepath_dsl_compatible, lines=True
-            ).to_dict("records")
+            sample_context_dict_list = pd.read_json(filepath_dsl_compatible, lines=True).to_dict('records')        
         else:
-            sample_context_dict_list = self.make_data_dsl_compatible(
-                sample_context_dict_list
-            )
+            sample_context_dict_list = self.make_data_dsl_compatible(sample_context_dict_list)
             _dump_dict_list_to_jsonl(sample_context_dict_list, filepath_dsl_compatible)
         return filepath_dsl_compatible
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--model_name",
-        type=str,
-        default="meta-llama/Meta-Llama-3.1-70B-Instruct",
-        required=False,
-    )
-    parser.add_argument(
-        "--model_access_method", type=str, default="vllm-api", required=False
-    )
-    parser.add_argument(
-        "--num_elements_by_class",
-        type=int,
-        default=6,
-        help="Number of elements (objects, containers, etc.) of each class to generate",
-    )
-    parser.add_argument(
-        "--num_contexts_to_generate",
-        type=int,
-        default=5,
-        help="Number of contexts to generate",
-    )
+    parser.add_argument('--model_name', type=str, default="meta-llama/Meta-Llama-3.1-70B-Instruct", required=False)
+    parser.add_argument('--model_access_method', type=str, default="vllm-api", required=False)
+    parser.add_argument('--num_elements_by_class', type=int, default=6, help="Number of elements (objects, containers, etc.) of each class to generate")
+    parser.add_argument('--num_contexts_to_generate', type=int, default=5, help="Number of contexts to generate")
     args = parser.parse_args()
 
-    assert (
-        args.num_elements_by_class <= 100 and args.num_contexts_to_generate <= 100
-    ), "Llama refuses to generate a longer list so for simplicity we cap to 100."
+    assert args.num_elements_by_class <= 100 and args.num_contexts_to_generate <= 100, "Llama refuses to generate a longer list so for simplicity we cap to 100."
 
     model_call_handler = ModelCallHandler(args.model_name, args.model_access_method)
     story_context_generator = StoryContextGenerator(model_call_handler)
     state_updates_generator = ObjectStateUpdatesGenerator(model_call_handler)
-    filepath = story_context_generator.main(
-        num_elements_by_class=args.num_elements_by_class,
-        num_requested_contexts=args.num_contexts_to_generate,
-    )
-    filepath = state_updates_generator.main(
-        filepath, num_contexts_to_fill=args.num_contexts_to_generate
-    )
-    print("Final generated context is in", filepath)
+    filepath = story_context_generator.main(num_elements_by_class=args.num_elements_by_class, num_requested_contexts=args.num_contexts_to_generate)
+    filepath = state_updates_generator.main(filepath, num_contexts_to_fill=args.num_contexts_to_generate)
+    print('Final generated context is in', filepath)
