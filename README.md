@@ -68,17 +68,22 @@ See all vllm args here: https://docs.vllm.ai/en/latest/models/engine_args.html
 6. <ctrl-A A D to get out>
 ```
 
+## Data Sample
+
+You can find a data sample of ExploreToM for Llama-3.1-70B-Instruct here: https://huggingface.co/datasets/facebook/ExploreToM . Have in mind that ExploreToM is an *adversarial data generation procedure* and thus, if you wish to test another model, you should run this code and NOT simply evaluate on the data sample shown in the link.
+
 ## Citation
 
 If you found the paper or data helpful, consider citing it:
 
 ```
 @inproceedings{
-exploretom2024,
-title={ExploreToM: program-guided adversarial data generation for theory of mind reasoning},
-author={Sclar, Melanie and Dwivedi-Yu, Jane and Fazel-Zarandi, Maryam and Tsvetkov, Yulia and Bisk, Yonatan and Choi, Yejin and Celikyilmaz, Asli},
-year={2024},
-note={under review}
+sclar2025explore,
+title={Explore Theory of Mind: program-guided adversarial data generation for theory of mind reasoning},
+author={Melanie Sclar and Jane Yu and Maryam Fazel-Zarandi and Yulia Tsvetkov and Yonatan Bisk and Yejin Choi and Asli Celikyilmaz},
+booktitle={The Thirteenth International Conference on Learning Representations},
+year={2025},
+url={https://openreview.net/forum?id=246rHKUnnf}
 }
 ```
 
